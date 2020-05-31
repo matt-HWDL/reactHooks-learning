@@ -1,24 +1,33 @@
-import React, {useState} from "react";
+import React from "react";
+import App from "../src/App";
+import ls from "local-storage";
 
-const InputElement = () => {
+const Index = ({ user, isServer }) => {
+  const isBrowser = typeof window !== "undefined";
 
-    const [inputText,setInputText] = useState("");
-    const [historyList, setHistoryList] = useState([]);
-
-    return <div><input 
-        onChange={(e) => {
-            setInputText(e.target.value)
-            setHistoryList([...historyList,e.target.value]);
-        }}
-        placeholder="Enter some text"/><br/>
-        {inputText}
-        <hr/><br/>
-        <ul>
-            {historyList.map((rec) => {
-                return <div>{rec}</div>
-            })}
-        </ul>
-        </div>
+  // this means running on first page load and inside the browser so should store in local storage
+  if (isServer && isBrowser) {
+    ls.set("userInfo", user);
+  }
+  return (
+    <div>
+      <App pageName="Home" userInfo={user} />
+    </div>
+  );
 };
 
-export default InputElement;
+Index.getInitialProps = async ({ req }) => {
+  const isServer = !!req;
+  if (isServer) {
+    return { user: req.user, isServer };
+  } else {
+    try {
+      const user = ls.get("userInfo");
+      return { user, isServer };
+    } catch (e) {
+      return { isServer };
+    }
+  }
+};
+
+export default Index;
